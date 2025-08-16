@@ -22,22 +22,26 @@ Get-Process | ForEach-Object {
     }
 }
 
-# Scan loaded modules (DLLs) per process
-Write-Host "`n[2] Checking loaded DLLs..."
-foreach ($p in Get-Process -ErrorAction SilentlyContinue) {
+# Scan only Minecraft (javaw.exe) loaded modules
+Write-Host "`n[2] Checking Minecraft DLLs..."
+$mc = Get-Process javaw -ErrorAction SilentlyContinue
+if ($mc) {
     try {
-        foreach ($m in $p.Modules) {
+        foreach ($m in $mc.Modules) {
             $modName = $m.ModuleName.ToLower()
             foreach ($kw in $suspiciousKeywords) {
                 if ($modName -like "*$kw*") {
-                    Write-Host "⚠ Suspicious module in $($p.ProcessName): $modName" -ForegroundColor Red
+                    Write-Host "⚠️ Suspicious module in Minecraft (javaw.exe): $modName" -ForegroundColor Red
                 }
             }
         }
     } catch {
-        # some system processes block module access
+        Write-Host "Could not scan Minecraft modules (access denied)." -ForegroundColor Yellow
     }
+} else {
+    Write-Host "Minecraft (javaw.exe) not running." -ForegroundColor Yellow
 }
+
 
 # Scan Program Files and Program Files (x86)
 Write-Host "`n[3] Checking Program Files folders..."
